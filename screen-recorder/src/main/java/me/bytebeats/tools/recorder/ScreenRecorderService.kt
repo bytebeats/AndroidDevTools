@@ -39,9 +39,9 @@ class ScreenRecorderService : Service() {
         intent?.apply {
             mResultCode = getIntExtra(EXTRA_RESULT_CODE, -1)
             mResultData = getParcelableExtra<Intent>(EXTRA_RESULT_DATA) as Intent
-            mScreenWidth = getIntExtra(EXTRA_RESULT_WIDTH, 0)
-            mScreenHeight = getIntExtra(EXTRA_RESULT_HEIGHT, 0)
-            mScreenDensity = getIntExtra(EXTRA_RESULT_DENSITY, 0)
+            mScreenWidth = getIntExtra(EXTRA_SCREEN_WIDTH, 0)
+            mScreenHeight = getIntExtra(EXTRA_SCREEN_HEIGHT, 0)
+            mScreenDensity = getIntExtra(EXTRA_SCREEN_DENSITY, 0)
         }
         try {
             mMediaProjection = createMediaProjection()
@@ -117,6 +117,6 @@ class ScreenRecorderService : Service() {
 internal const val TAG = "ScreenRecorderService"
 const val EXTRA_RESULT_CODE = "result_code"
 const val EXTRA_RESULT_DATA = "result_data"
-const val EXTRA_RESULT_WIDTH = "result_width"
-const val EXTRA_RESULT_HEIGHT = "result_height"
-const val EXTRA_RESULT_DENSITY = "result_density"
+const val EXTRA_SCREEN_WIDTH = "screen_width"
+const val EXTRA_SCREEN_HEIGHT = "screen_height"
+const val EXTRA_SCREEN_DENSITY = "screen_density"

@@ -1,5 +1,6 @@
 package me.bytebeats.tools.recorder
 
+import android.content.Intent
 import androidx.fragment.app.FragmentActivity
 
 /**
@@ -7,11 +8,11 @@ import androidx.fragment.app.FragmentActivity
  * E-mail: happychinapc@gmail.com
  * Quote: Peasant. Educated. Worker
  */
-class PermissionRequestLauncher(private val activity: FragmentActivity) {
+class ActivityResultLauncher(private val activity: FragmentActivity) {
     companion object {
         private const val TAG = "RequestLauncher"
-        fun with(activity: FragmentActivity): PermissionRequestLauncher {
-            return PermissionRequestLauncher(activity)
+        fun with(activity: FragmentActivity): ActivityResultLauncher {
+            return ActivityResultLauncher(activity)
         }
     }
 
@@ -28,7 +29,14 @@ class PermissionRequestLauncher(private val activity: FragmentActivity) {
         return reportFragment
     }
 
-    fun requestPermissions(permissions: Array<out String>, callback: ReportFragment.Callback?) {
+    fun startActivityForResult(intent: Intent, callback: ReportFragment.ActivityResultCallback?) {
+        mReportFragment.startActivityForResult(intent, callback)
+    }
+
+    fun requestPermissions(
+        permissions: Array<out String>,
+        callback: ReportFragment.RequestPermissionCallback?
+    ) {
         mReportFragment.requestPermissions(permissions, callback)
     }
 }

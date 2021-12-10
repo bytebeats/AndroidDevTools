@@ -1,5 +1,6 @@
 package me.bytebeats.tools.recorder
 
+import android.content.Intent
 import androidx.collection.SparseArrayCompat
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
@@ -11,7 +12,8 @@ import kotlin.random.Random
  * Quote: Peasant. Educated. Worker
  */
 class ReportFragment : Fragment() {
-    private val mCallbacks = SparseArrayCompat<Callback?>()
+    private val mRequestPermissionCallbacks = SparseArrayCompat<RequestPermissionCallback?>()
+    private val mActivityResultCallbacks = SparseArrayCompat<ActivityResultCallback?>()
     private val mRequestCodeGenerator = Random.Default
 
     companion object {
@@ -20,9 +22,21 @@ class ReportFragment : Fragment() {
         }
     }
 
-    fun requestPermissions(permissions: Array<out String>, callback: Callback?) {
+    fun startActivityForResult(
+        intent: Intent,
+        callback: ActivityResultCallback?
+    ) {
         val requestCode = makeRequestCode()
-        mCallbacks.put(requestCode, callback)
+        mActivityResultCallbacks.put(requestCode, callback)
+        ActivityCompat.startActivityForResult(requireActivity(), intent, requestCode, null)
+    }
+
+    fun requestPermissions(
+        permissions: Array<out String>,
+        callback: RequestPermissionCallback?
+    ) {
+        val requestCode = makeRequestCode()
+        mRequestPermissionCallbacks.put(requestCode, callback)
         ActivityCompat.requestPermissions(requireActivity(), permissions, requestCode)
     }
 
@@ -32,7 +46,7 @@ class ReportFragment : Fragment() {
         do {
             requestCode = mRequestCodeGenerator.nextInt(0xffff)
             retry += 1
-        } while (mCallbacks.indexOfKey(requestCode) >= 0 && retry < 10)
+        } while (mRequestPermissionCallbacks.indexOfKey(requestCode) >= 0 && retry < 10)
         return requestCode
     }
 
@@ -41,13 +55,25 @@ class ReportFragment : Fragment() {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-        mCallbacks[requestCode]?.let {
+        mRequestPermissionCallbacks[requestCode]?.let {
             it.onRequestPermissionsResult(requestCode, permissions, grantResults)
-            mCallbacks.remove(requestCode)
+            mRequestPermissionCallbacks.remove(requestCode)
         }
     }
 
-    interface Callback {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        mActivityResultCallbacks[requestCode]?.let {
+            it.onActivityResult(requestCode, resultCode, data)
+            mActivityResultCallbacks.remove(requestCode)
+        }
+    }
+
+    interface ActivityResultCallback {
+        fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?)
+    }
+
+    interface RequestPermissionCallback {
         fun onRequestPermissionsResult(
             requestCode: Int,
             permissions: Array<out String>,

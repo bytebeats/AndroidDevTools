@@ -24,6 +24,12 @@ class Initializer : ContentProvider() {
                         activity: Activity,
                         savedInstanceState: Bundle?
                     ) {
+                    }
+
+                    override fun onActivityPostCreated(
+                        activity: Activity,
+                        savedInstanceState: Bundle?
+                    ) {
                         if (activity is FragmentActivity) {
                             activity.inflateRecorderFloatWindow()
                         }
