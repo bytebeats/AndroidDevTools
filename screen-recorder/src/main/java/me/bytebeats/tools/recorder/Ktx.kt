@@ -3,6 +3,7 @@ package me.bytebeats.tools.recorder
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.PixelFormat
 import android.media.projection.MediaProjectionManager
 import android.os.Build
@@ -10,7 +11,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.WindowManager
 import android.widget.ImageView
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -23,7 +24,7 @@ import androidx.lifecycle.LifecycleOwner
 
 internal const val RECORDING_REQUEST_CODE = 0x10001
 
-internal val PERMISSIONS = listOf(
+internal val PERMISSIONS = arrayOf(
     Manifest.permission.MOUNT_UNMOUNT_FILESYSTEMS,
     Manifest.permission.WRITE_EXTERNAL_STORAGE,
     Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -31,7 +32,7 @@ internal val PERMISSIONS = listOf(
     Manifest.permission.SYSTEM_ALERT_WINDOW,
 )
 
-fun ComponentActivity.addFloatWindow() {
+fun FragmentActivity.inflateRecorderFloatWindow() {
     val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
     val floatView = LayoutInflater.from(this).inflate(R.layout.recorder_floating_window, null)
     lifecycle.addObserver(object : LifecycleEventObserver {
@@ -61,14 +62,14 @@ fun ComponentActivity.addFloatWindow() {
                             setImageResource(R.drawable.recorder_stop)
                             stopRecording()
                         } else {
-                            setImageResource(R.drawable.recorder_start)
-                            requestPermissions(onAllGranted = {
+                            requestPermissions(PERMISSIONS, onAllGranted = {
                                 startRecording()
                                 tag = true
+                                setImageResource(R.drawable.recorder_start)
 
                             }, onDenied = { permissions ->
                                 tag = false
-
+                                setImageResource(R.drawable.recorder_stop)
                             })
                         }
                     }
@@ -84,21 +85,35 @@ fun ComponentActivity.addFloatWindow() {
     })
 }
 
-internal fun ComponentActivity.startRecording() {
+internal fun FragmentActivity.startRecording() {
     val mediaProjectionManager =
         getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
     val intent = mediaProjectionManager.createScreenCaptureIntent()
     startActivityForResult(intent, RECORDING_REQUEST_CODE)
 }
 
-internal fun ComponentActivity.stopRecording() {
+internal fun FragmentActivity.stopRecording() {
     val intent = Intent(this, ScreenRecorderService::class.java)
     stopService(intent)
 }
 
-internal fun ComponentActivity.requestPermissions(
+internal fun FragmentActivity.requestPermissions(
+    permissions: Array<out String>,
     onAllGranted: () -> Unit,
-    onDenied: ((Array<String>) -> Unit)? = null
+    onDenied: ((List<String>) -> Unit)? = null
 ) {
-
+    PermissionRequestLauncher.with(this)
+        .requestPermissions(permissions, object : ReportFragment.Callback {
+            override fun onRequestPermissionsResult(
+                requestCode: Int,
+                permissions: Array<out String>,
+                grantResults: IntArray
+            ) {
+                if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                    onAllGranted()
+                } else {
+                    onDenied?.invoke(permissions.filterIndexed { index, _ -> grantResults[index] != PackageManager.PERMISSION_DENIED })
+                }
+            }
+        })
 }
