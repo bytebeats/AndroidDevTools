@@ -31,6 +31,7 @@ internal val PERMISSIONS = arrayOf(
     Manifest.permission.READ_EXTERNAL_STORAGE,
     Manifest.permission.CAMERA,
     Manifest.permission.SYSTEM_ALERT_WINDOW,
+    Manifest.permission.FOREGROUND_SERVICE,
 )
 
 fun FragmentActivity.inflateRecorderFloatWindow() {
@@ -60,7 +61,6 @@ fun FragmentActivity.inflateRecorderFloatWindow() {
                     layoutParams.x = windowManager.defaultDisplay.width - floatView.width
                     layoutParams.y = windowManager.defaultDisplay.height - floatView.height
                     Log.i(TAG, "${layoutParams.x}, ${layoutParams.y}")
-
                 }
                 floatView.findViewById<ImageView>(R.id.recorder_action).apply {
                     tag = false
@@ -126,7 +126,11 @@ fun FragmentActivity.startRecording(resultCode: Int, data: Intent?) {
         putExtra(EXTRA_SCREEN_HEIGHT, metrics.heightPixels)
         putExtra(EXTRA_SCREEN_DENSITY, metrics.densityDpi)
     }
-    startService(intent)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        startForegroundService(intent)
+    } else {
+        startService(intent)
+    }
 }
 
 fun FragmentActivity.stopRecording() {

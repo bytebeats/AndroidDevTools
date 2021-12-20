@@ -28,7 +28,7 @@ class ReportFragment : Fragment() {
     ) {
         val requestCode = makeRequestCode()
         mActivityResultCallbacks.put(requestCode, callback)
-        ActivityCompat.startActivityForResult(requireActivity(), intent, requestCode, null)
+        startActivityForResult(intent, requestCode, null)
     }
 
     fun requestPermissions(
@@ -37,7 +37,7 @@ class ReportFragment : Fragment() {
     ) {
         val requestCode = makeRequestCode()
         mRequestPermissionCallbacks.put(requestCode, callback)
-        ActivityCompat.requestPermissions(requireActivity(), permissions, requestCode)
+        requestPermissions(permissions, requestCode)
     }
 
     private fun makeRequestCode(): Int {

@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application>
         <provider
@@ -18,5 +19,9 @@
             android:authorities="${applicationId}.recorder.provider"
             android:exported="false"
             android:initOrder="98" />
+        <service
+            android:name=".ScreenRecorderService"
+            android:enabled="true"
+            android:foregroundServiceType="mediaProjection" />
     </application>
 </manifest>

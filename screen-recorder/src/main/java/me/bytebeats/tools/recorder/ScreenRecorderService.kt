@@ -1,13 +1,15 @@
 package me.bytebeats.tools.recorder
 
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.MediaRecorder
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
+import android.os.Build
 import android.os.Environment
 import android.os.IBinder
 import android.util.Log
@@ -37,6 +39,7 @@ class ScreenRecorderService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.apply {
+            createNotificationChannel(this)
             mResultCode = getIntExtra(EXTRA_RESULT_CODE, -1)
             mResultData = getParcelableExtra<Intent>(EXTRA_RESULT_DATA) as Intent
             mScreenWidth = getIntExtra(EXTRA_SCREEN_WIDTH, 0)
@@ -66,7 +69,11 @@ class ScreenRecorderService : Service() {
             dir.mkdirs()
         }
         val sdf = SimpleDateFormat("yyyy/MM/dd - HH:mm:ss")
-        val file = "$dir${sdf.format(Date())}.mp4"
+        val path = "$dir/${sdf.format(Date())}.mp4"
+        val file = File(path)
+        if (!file.exists()) {
+            file.createNewFile()
+        }
         return try {
             MediaRecorder().apply {
                 setVideoSource(MediaRecorder.VideoSource.SURFACE)
@@ -75,7 +82,11 @@ class ScreenRecorderService : Service() {
                 setVideoEncoder(MediaRecorder.VideoEncoder.H264)
                 setVideoSize(mScreenWidth, mScreenHeight)
                 setVideoFrameRate(60)
-                setOutputFile(file)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    setOutputFile(file)
+                } else {
+                    setOutputFile(path)
+                }
                 prepare()
             }
         } catch (ignore: Exception) {
@@ -112,6 +123,44 @@ class ScreenRecorderService : Service() {
         mMediaRecorder?.stop()
         mMediaProjection?.stop()
     }
+
+    private fun createNotificationChannel(intent: Intent) {
+        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, SCREEN_RECORDER_CHANNEL_ID)
+        } else {
+            Notification.Builder(this)
+        }
+
+        builder.setContentIntent(
+            PendingIntent.getActivity(
+                this,
+                0,
+                Intent(intent.component?.className),
+                0
+            )
+        ).setLargeIcon(
+            BitmapFactory.decodeResource(
+                resources,
+                R.drawable.ic_notification_recording
+            )
+        )
+            .setSmallIcon(R.drawable.ic_notification_recording)
+            .setContentText("Recording...")
+            .setWhen(System.currentTimeMillis())
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val channel = NotificationChannel(
+                SCREEN_RECORDER_CHANNEL_ID,
+                "screen_recorder_channel",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            manager.createNotificationChannel(channel)
+        }
+        val notification = builder.build()
+        notification.defaults = Notification.DEFAULT_SOUND
+        startForeground(SCREEN_RECORDER_CHANNEL_ID.hashCode(), notification)
+    }
 }
 
 internal const val TAG = "ScreenRecorderService"
@@ -120,3 +169,4 @@ const val EXTRA_RESULT_DATA = "result_data"
 const val EXTRA_SCREEN_WIDTH = "screen_width"
 const val EXTRA_SCREEN_HEIGHT = "screen_height"
 const val EXTRA_SCREEN_DENSITY = "screen_density"
+internal val SCREEN_RECORDER_CHANNEL_ID = "screen_recorder_channel_id"

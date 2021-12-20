@@ -6,6 +6,7 @@ import android.widget.Button
 import me.bytebeats.tools.recorder.simulateHomeClick
 import me.bytebeats.tools.recorder.requestRecordingPermission
 import me.bytebeats.tools.recorder.startRecording
+import me.bytebeats.tools.recorder.stopRecording
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,10 +16,17 @@ class MainActivity : AppCompatActivity() {
             simulateHomeClick()
         }
         findViewById<Button>(R.id.add_float_window).setOnClickListener {
+        }
+
+        findViewById<Button>(R.id.start_recording).setOnClickListener {
             requestRecordingPermission(onGranted = { code, data ->
                 startRecording(code, data)
             }, onDenied = {
             })
+        }
+
+        findViewById<Button>(R.id.stop_recording).setOnClickListener {
+            stopRecording()
         }
     }
 }
