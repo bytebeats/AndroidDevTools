@@ -5,19 +5,13 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.PixelFormat
 import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.util.DisplayMetrics
 import android.util.Log
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.WindowManager
 import android.widget.ImageView
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
+import me.bytebeats.tools.window.FloatingWindow
 
 /**
  * Created by bytebeats on 2021/12/10 : 15:51
@@ -36,65 +30,73 @@ val PERMISSIONS = arrayOf(
 
 fun FragmentActivity.inflateRecorderFloatWindow() {
     Log.i(TAG, "inflateRecorderFloatWindow")
-    val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-    val floatView = LayoutInflater.from(this).inflate(R.layout.recorder_floating_window, null)
-    lifecycle.addObserver(object : LifecycleEventObserver {
-        override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-            if (event == Lifecycle.Event.ON_CREATE) {
-                Log.i(TAG, "ON_CREATE")
-                val layoutParams = WindowManager.LayoutParams()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+//    val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+//    val floatView =
+//        LayoutInflater.from(this).inflate(R.layout.recorder_floating_window, null, false)
+//    lifecycle.addObserver(object : LifecycleEventObserver {
+//        override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+//            if (event == Lifecycle.Event.ON_RESUME) {
+    Log.i(TAG, "ON_CREATE")
+//    val layoutParams = WindowManager.LayoutParams()
+//    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//        layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+//    } else {
+//        layoutParams.type = WindowManager.LayoutParams.TYPE_PHONE
+//    }
+//    layoutParams.flags =
+//        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+//
+//    layoutParams.gravity = Gravity.LEFT //Gravity.END and Gravity.BOTTOM
+//    layoutParams.format = PixelFormat.RGBA_8888
+//    layoutParams.width = 100
+    //WindowManager.LayoutParams.MATCH_PARENT
+//    layoutParams.height = 100
+    //WindowManager.LayoutParams.MATCH_PARENT
+//    layoutParams.x = 0
+//    layoutParams.y = 0
+//    windowManager.addView(floatView, layoutParams)
+//    Log.i(TAG, "addView")
+//    floatView.post {
+//                    layoutParams.x = windowManager.defaultDisplay.width - floatView.width
+//                    layoutParams.y = windowManager.defaultDisplay.height - floatView.height
+//        Log.i(TAG, "${layoutParams.x}, ${layoutParams.y}")
+//    }
+    FloatingWindow(this, R.layout.recorder_floating_window).onView { floatView ->
+
+        floatView?.findViewById<ImageView>(R.id.recorder_action)?.apply {
+            tag = false
+            setOnClickListener {
+                if (tag == true) {
+                    setImageResource(R.drawable.recorder_stop)
+                    stopRecording()
                 } else {
-                    layoutParams.type = WindowManager.LayoutParams.TYPE_PHONE
-                }
-                layoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                layoutParams.gravity = Gravity.START //Gravity.END and Gravity.BOTTOM
-                layoutParams.format = PixelFormat.RGBA_8888
-                layoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT
-                layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT
-//                layoutParams.x = 0
-//                layoutParams.y = 0
-                windowManager.addView(floatView, layoutParams)
-                Log.i(TAG, "addView")
-                floatView.post {
-                    layoutParams.x = windowManager.defaultDisplay.width - floatView.width
-                    layoutParams.y = windowManager.defaultDisplay.height - floatView.height
-                    Log.i(TAG, "${layoutParams.x}, ${layoutParams.y}")
-                }
-                floatView.findViewById<ImageView>(R.id.recorder_action).apply {
-                    tag = false
-                    setOnClickListener {
-                        if (tag == true) {
+                    requestPermissions(PERMISSIONS, onAllGranted = {
+                        requestRecordingPermission(onGranted = { code, data ->
+                            startRecording(code, data)
+                            tag = true
+                            setImageResource(R.drawable.recorder_start)
+                        }, onDenied = {
+                            tag = false
                             setImageResource(R.drawable.recorder_stop)
-                            stopRecording()
-                        } else {
-                            requestPermissions(PERMISSIONS, onAllGranted = {
-                                requestRecordingPermission(onGranted = { code, data ->
-                                    startRecording(code, data)
-                                    tag = true
-                                    setImageResource(R.drawable.recorder_start)
-                                }, onDenied = {
-                                    tag = false
-                                    setImageResource(R.drawable.recorder_stop)
-                                })
-                            }, onDenied = { permissions ->
-                                tag = false
-                                setImageResource(R.drawable.recorder_stop)
-                            })
-                        }
-                    }
-                    setOnLongClickListener {
-                        windowManager.removeView(floatView)
-                        false
-                    }
+                        })
+                    }, onDenied = { permissions ->
+                        tag = false
+                        setImageResource(R.drawable.recorder_stop)
+                    })
                 }
-            } else if (event == Lifecycle.Event.ON_DESTROY) {
-                windowManager.removeView(floatView)
-                Log.i(TAG, "ON_DESTROY")
+            }
+            setOnLongClickListener {
+//                windowManager.removeView(floatView)
+                false
             }
         }
-    })
+    }
+//            } else if (event == Lifecycle.Event.ON_DESTROY) {
+//                windowManager.removeView(floatView)
+//                Log.i(TAG, "ON_DESTROY")
+//            }
+//        }
+//    })
 }
 
 fun FragmentActivity.requestRecordingPermission(

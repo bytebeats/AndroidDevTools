@@ -30,9 +30,6 @@ class Initializer : ContentProvider() {
                         activity: Activity,
                         savedInstanceState: Bundle?
                     ) {
-                        if (activity is FragmentActivity) {
-                            activity.inflateRecorderFloatWindow()
-                        }
                     }
 
                     override fun onActivityStarted(activity: Activity) {
@@ -40,7 +37,9 @@ class Initializer : ContentProvider() {
                     }
 
                     override fun onActivityResumed(activity: Activity) {
-
+                        if (activity is FragmentActivity) {
+//                            activity.inflateRecorderFloatWindow()
+                        }
                     }
 
                     override fun onActivityPaused(activity: Activity) {
