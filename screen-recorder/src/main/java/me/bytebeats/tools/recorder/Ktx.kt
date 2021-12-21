@@ -25,7 +25,7 @@ import androidx.lifecycle.LifecycleOwner
  * Quote: Peasant. Educated. Worker
  */
 
-internal val PERMISSIONS = arrayOf(
+val PERMISSIONS = arrayOf(
     Manifest.permission.MOUNT_UNMOUNT_FILESYSTEMS,
     Manifest.permission.WRITE_EXTERNAL_STORAGE,
     Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -138,7 +138,7 @@ fun FragmentActivity.stopRecording() {
     stopService(intent)
 }
 
-internal fun FragmentActivity.requestPermissions(
+fun FragmentActivity.requestPermissions(
     permissions: Array<out String>,
     onAllGranted: () -> Unit,
     onDenied: ((List<String>) -> Unit)? = null
@@ -153,7 +153,9 @@ internal fun FragmentActivity.requestPermissions(
                 if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                     onAllGranted()
                 } else {
-                    onDenied?.invoke(permissions.filterIndexed { index, _ -> grantResults[index] != PackageManager.PERMISSION_DENIED })
+                    val deniedPermissions =
+                        permissions.filterIndexed { index, _ -> grantResults[index] != PackageManager.PERMISSION_GRANTED }
+                    onDenied?.invoke(deniedPermissions)
                 }
             }
         })

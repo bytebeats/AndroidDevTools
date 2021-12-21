@@ -63,33 +63,39 @@ class ScreenRecorderService : Service() {
             .getMediaProjection(mResultCode, mResultData)
 
     private fun createMediaRecorder(): MediaRecorder? {
+        val sdCardPath = if (Environment.getExternalStorageState()
+                .equals(Environment.MEDIA_MOUNTED)
+        )
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString()
+        else
+            Environment.getDownloadCacheDirectory().toString()
         val dir =
-            File("${Environment.getExternalStorageState()}${File.separator}ScreenVideo${File.separator}")
-        if (!dir.exists()) {
-            dir.mkdirs()
-        }
-        val sdf = SimpleDateFormat("yyyy/MM/dd - HH:mm:ss")
-        val path = "$dir/${sdf.format(Date())}.mp4"
-        val file = File(path)
-        if (!file.exists()) {
-            file.createNewFile()
-        }
+            File("${sdCardPath}${File.separator}ScreenVideo")
+        dir.mkdirs()
+        val sdf = SimpleDateFormat("yyyy-MM-dd--HH:mm:ss")
+        val fileName = "${sdf.format(Date()).hashCode()}.mp4"
         return try {
             MediaRecorder().apply {
                 setVideoSource(MediaRecorder.VideoSource.SURFACE)
                 setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-                setVideoEncodingBitRate(5 * mScreenWidth * mScreenHeight)
+//                setVideoEncodingBitRate(5 * mScreenWidth * mScreenHeight)
                 setVideoEncoder(MediaRecorder.VideoEncoder.H264)
                 setVideoSize(mScreenWidth, mScreenHeight)
                 setVideoFrameRate(60)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val file = File(dir, fileName)
+                    if (!file.exists()) {
+                        file.createNewFile()
+                    }
                     setOutputFile(file)
                 } else {
+                    val path = "$dir/${sdf.format(Date()).hashCode()}.mp4"
                     setOutputFile(path)
                 }
                 prepare()
             }
         } catch (ignore: Exception) {
+            Log.d(TAG, ignore.message, ignore)
             null
         }
     }
